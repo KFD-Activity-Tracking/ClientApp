@@ -9,6 +9,7 @@ class WindowsTracker : DesktopTracker() {
                 "(Get-Process | Where-Object { \$_.MainWindowHandle -ne 0 -and \$_.MainWindowTitle -ne '' } | Select-Object -First 1).Name"
             ).start().inputStream.bufferedReader().readText().trim().takeIf { it.isNotEmpty() }
         } catch (e: Exception) {
+            println("getActiveApp error: ${e.message}")
             null
         }
     }

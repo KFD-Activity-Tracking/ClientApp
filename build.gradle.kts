@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "2.3.10"
+    kotlin("plugin.serialization") version "2.3.10"
     application
 }
 
@@ -21,6 +22,11 @@ dependencies {
     implementation("org.xerial:sqlite-jdbc:3.53.0.0")
     implementation("io.ktor:ktor-client-core:3.4.2")
     implementation("io.ktor:ktor-client-cio:3.4.2")
+    implementation("io.ktor:ktor-client-content-negotiation:3.4.2")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.4.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    implementation("com.github.kwhat:jnativehook:2.2.2")
 }
 
 kotlin {

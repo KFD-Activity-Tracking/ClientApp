@@ -13,9 +13,9 @@ fun saveMouseAction(deltaX: Int, deltaY: Int) {
 
         MouseActionTable.insert {
             it[id] = actionId
-            it[this.deltaX] = deltaX
-            it[this.deltaY] = deltaY
-            it[button] = null
+            it[this.deltaX] = deltaX.toFloat()
+            it[this.deltaY] = deltaY.toFloat()
+            it[isClick] = false
         }
     }
 }
@@ -31,7 +31,7 @@ fun saveMouseClickAction(button: Int) {
             it[id] = actionId
             it[deltaX] = null
             it[deltaY] = null
-            it[this.button] = button
+            it[isClick] = true
         }
     }
 }

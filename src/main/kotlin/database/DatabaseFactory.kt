@@ -7,6 +7,6 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 fun init(){
     Database.connect("jdbc:sqlite:activity.db", driver = "org.sqlite.JDBC")
     transaction {
-        SchemaUtils.create(ActionTable, MouseActionTable, KeyboardActionTable, AppActionTable)
+        SchemaUtils.createMissingTablesAndColumns(ActionTable, MouseActionTable, KeyboardActionTable, AppActionTable)
     }
 }

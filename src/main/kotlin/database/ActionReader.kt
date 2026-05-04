@@ -1,6 +1,7 @@
 package database
 
 import network.ActionDto
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.isNotNull
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
@@ -29,15 +30,30 @@ fun readPendingActions(): List<PendingAction> = transaction {
 
     val mouseMoves = (ActionTable innerJoin MouseActionTable)
         .selectAll()
-        .where { MouseActionTable.deltaX.isNotNull() }
+        .where { MouseActionTable.isClick eq false }
         .map { row ->
             PendingAction(
                 id = row[ActionTable.id],
                 dto = ActionDto(
                     type = "mouse",
                     performedAt = formatMs(row[ActionTable.performedAt]),
-                    delta_x = row[MouseActionTable.deltaX]!!,
-                    delta_y = row[MouseActionTable.deltaY]!!
+                    delta_x = row[MouseActionTable.deltaX],
+                    delta_y = row[MouseActionTable.deltaY],
+                    is_click = false
+                )
+            )
+        }
+
+    val mouseClicks = (ActionTable innerJoin MouseActionTable)
+        .selectAll()
+        .where { MouseActionTable.isClick eq true }
+        .map { row ->
+            PendingAction(
+                id = row[ActionTable.id],
+                dto = ActionDto(
+                    type = "mouse",
+                    performedAt = formatMs(row[ActionTable.performedAt]),
+                    is_click = true
                 )
             )
         }
@@ -53,7 +69,7 @@ fun readPendingActions(): List<PendingAction> = transaction {
         )
     }
 
-    keyboard + mouseMoves + apps
+    keyboard + mouseMoves + mouseClicks + apps
 }
 
 fun deleteSentActions(ids: List<Long>) = transaction {

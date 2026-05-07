@@ -1,6 +1,5 @@
 package database
 
-import model.ActionType
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
@@ -20,7 +19,7 @@ fun saveMouseAction(deltaX: Int, deltaY: Int) {
     }
 }
 
-fun saveMouseClickAction(button: Int) {
+fun saveMouseClickAction(button: Int, x: Float, y: Float) {
     transaction {
         val actionId = ActionTable.insert {
             it[performedAt] = System.currentTimeMillis()
@@ -29,8 +28,8 @@ fun saveMouseClickAction(button: Int) {
 
         MouseActionTable.insert {
             it[id] = actionId
-            it[deltaX] = null
-            it[deltaY] = null
+            it[deltaX] = x
+            it[deltaY] = y
             it[isClick] = true
         }
     }

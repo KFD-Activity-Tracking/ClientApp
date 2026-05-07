@@ -3,18 +3,17 @@ package database
 import network.ActionDto
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
-import org.jetbrains.exposed.v1.core.isNotNull
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.Instant
 import java.time.LocalDateTime
-import java.time.ZoneId
+import java.time.ZoneOffset
 
 data class PendingAction(val id: Long, val dto: ActionDto)
 
 private fun formatMs(ms: Long): String =
-    LocalDateTime.ofInstant(Instant.ofEpochMilli(ms), ZoneId.systemDefault()).toString()
+    LocalDateTime.ofInstant(Instant.ofEpochMilli(ms), ZoneOffset.UTC).toString()
 
 fun readPendingActions(): List<PendingAction> = transaction {
     val keyboard = (ActionTable innerJoin KeyboardActionTable).selectAll().map { row ->
@@ -53,6 +52,8 @@ fun readPendingActions(): List<PendingAction> = transaction {
                 dto = ActionDto(
                     type = "mouse",
                     performedAt = formatMs(row[ActionTable.performedAt]),
+                    delta_x = row[MouseActionTable.deltaX],
+                    delta_y = row[MouseActionTable.deltaY],
                     is_click = true
                 )
             )

@@ -13,7 +13,9 @@ abstract class DesktopTracker : InputTracker, NativeKeyListener, NativeMouseList
 
     override var onKeyPressed: ((keyCode: Int) -> Unit)? = null
     override var onMouseMoved: ((deltaX: Int, deltaY: Int) -> Unit)? = null
-    override var onMouseClicked: ((button: Int) -> Unit)? = null
+    override var onMouseClicked: ((button: Int, x: Float, y: Float) -> Unit)? = null
+
+    private val screenSize by lazy { java.awt.Toolkit.getDefaultToolkit().screenSize }
     override var onAppSwitched: ((appName: String) -> Unit)? = null
 
     private var lastMouseX: Int = 0
@@ -62,7 +64,11 @@ abstract class DesktopTracker : InputTracker, NativeKeyListener, NativeMouseList
     override fun nativeKeyTyped(e: NativeKeyEvent) {}
 
     override fun nativeMouseClicked(e: NativeMouseEvent) {}
-    override fun nativeMousePressed(e: NativeMouseEvent) { onMouseClicked?.invoke(e.button) }
+    override fun nativeMousePressed(e: NativeMouseEvent) {
+        val nx = e.x.toFloat() / screenSize.width.coerceAtLeast(1)
+        val ny = e.y.toFloat() / screenSize.height.coerceAtLeast(1)
+        onMouseClicked?.invoke(e.button, nx.coerceIn(0f, 1f), ny.coerceIn(0f, 1f))
+    }
     override fun nativeMouseReleased(e: NativeMouseEvent) {}
 
     override fun nativeMouseMoved(e: NativeMouseEvent) {

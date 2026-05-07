@@ -45,6 +45,13 @@ fun startBatchSender(
         }
         metricsCollector.sample()
     }
+    try {
+        val pending = readPendingActions()
+        if (pending.isNotEmpty()) {
+            runBlocking { client.sendBatch(pending.map { it.dto }) }
+            deleteSentActions(pending.map { it.id })
+        }
+    } catch (_: Exception) {}
     val (cpu, ram, gpu) = metricsCollector.averages()
     try { runBlocking { client.endSession(cpu, ram, gpu) } } catch (_: Exception) {}
     client.close()

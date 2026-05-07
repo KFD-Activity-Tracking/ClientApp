@@ -156,15 +156,33 @@ class TrackerWindow(
     }
 
     private fun styleButton(btn: JButton, color: Color) {
-        btn.background = Color(color.red, color.green, color.blue, 30)
-        btn.foreground = color
-        btn.border = BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(Color(color.red, color.green, color.blue, 80)),
+        val normalBorder  = BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Color(color.red, color.green, color.blue, 100)),
             EmptyBorder(7, 14, 7, 14)
         )
-        btn.font = Font(Font.DIALOG, Font.BOLD, 13)
+        val hoverBorder = BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(color),
+            EmptyBorder(7, 14, 7, 14)
+        )
+        btn.isContentAreaFilled = false
+        btn.isOpaque = false
         btn.isFocusPainted = false
+        btn.foreground = color
+        btn.border = normalBorder
+        btn.font = Font(Font.DIALOG, Font.BOLD, 13)
         btn.cursor = Cursor(Cursor.HAND_CURSOR)
+
+        btn.addMouseListener(object : java.awt.event.MouseAdapter() {
+            override fun mouseEntered(e: java.awt.event.MouseEvent) {
+                if (btn.isEnabled) btn.border = hoverBorder
+            }
+            override fun mouseExited(e: java.awt.event.MouseEvent) {
+                btn.border = normalBorder
+            }
+            override fun mouseReleased(e: java.awt.event.MouseEvent) {
+                btn.border = if (btn.isEnabled) hoverBorder else normalBorder
+            }
+        })
     }
 
     private fun applyDarkTheme() {

@@ -1,6 +1,7 @@
 package ui
 
 import java.awt.*
+import java.awt.image.BufferedImage
 import javax.swing.*
 import javax.swing.border.EmptyBorder
 
@@ -20,16 +21,29 @@ class TrackerWindow(
         lineWrap = true
     }
 
-    private val usernameField = JTextField("user", 18)
-    private val passwordField = JPasswordField("user", 18)
+    private val usernameField = JTextField("", 18)
+    private val passwordField = JPasswordField("", 18)
     private val startBtn      = JButton("Начать сессию")
     private val stopBtn       = JButton("Остановить").apply { isEnabled = false }
+    private val exitBtn       = JButton("Завершить приложение")
+
+    private var trayIcon: TrayIcon? = null
 
     init {
         applyDarkTheme()
         buildUi()
+        setupTray()
         frame.apply {
-            defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+            defaultCloseOperation = JFrame.DO_NOTHING_ON_CLOSE
+            addWindowListener(object : java.awt.event.WindowAdapter() {
+                override fun windowClosing(e: java.awt.event.WindowEvent) {
+                    if (trayIcon != null) {
+                        frame.isVisible = false
+                    } else {
+                        frame.state = Frame.ICONIFIED
+                    }
+                }
+            })
             pack()
             setLocationRelativeTo(null)
             isVisible = true
@@ -81,9 +95,10 @@ class TrackerWindow(
 
         // ── Buttons ──
         styleButton(startBtn, Color(63, 185, 80))
-        styleButton(stopBtn, Color(232, 74, 111))
+        styleButton(stopBtn,  Color(232, 74, 111))
+        styleButton(exitBtn,  Color(100, 110, 130))
 
-        val btnPanel = JPanel(GridLayout(1, 2, 8, 0)).apply {
+        val sessionBtns = JPanel(GridLayout(1, 2, 8, 0)).apply {
             background = Color(22, 27, 34)
             add(startBtn)
             add(stopBtn)
@@ -101,6 +116,7 @@ class TrackerWindow(
             startBtn.isEnabled = true
             setStatus(false, "Остановлено")
         }
+        exitBtn.addActionListener { exitApp() }
 
         // ── Log ──
         val logScroll = JScrollPane(logArea).apply {
@@ -114,18 +130,68 @@ class TrackerWindow(
             background = Color(22, 27, 34)
             add(form)
             add(Box.createVerticalStrut(8))
-            add(btnPanel)
+            add(sessionBtns)
             add(Box.createVerticalStrut(10))
             add(logScroll)
+            add(Box.createVerticalStrut(8))
+            add(exitBtn.apply { maximumSize = Dimension(Int.MAX_VALUE, exitBtn.preferredSize.height) })
         }
         root.add(center, BorderLayout.CENTER)
         frame.contentPane = root
+    }
+
+    private fun setupTray() {
+        if (!SystemTray.isSupported()) return
+
+        val img = buildTrayImage()
+        val popup = PopupMenu().apply {
+            add(MenuItem("Открыть").also { it.addActionListener { showWindow() } })
+            addSeparator()
+            add(MenuItem("Завершить").also { it.addActionListener { exitApp() } })
+        }
+
+        trayIcon = TrayIcon(img, "KFD Activity Tracker", popup).apply {
+            isImageAutoSize = true
+            addActionListener { showWindow() }
+        }
+
+        try {
+            SystemTray.getSystemTray().add(trayIcon)
+        } catch (_: AWTException) {
+            trayIcon = null
+        }
+    }
+
+    private fun buildTrayImage(): Image {
+        val size = 16
+        val img = BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
+        val g = img.createGraphics()
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+        g.color = Color(63, 185, 80)
+        g.fillOval(1, 1, size - 2, size - 2)
+        g.dispose()
+        return img
+    }
+
+    private fun showWindow() {
+        SwingUtilities.invokeLater {
+            frame.isVisible = true
+            frame.state = Frame.NORMAL
+            frame.toFront()
+        }
+    }
+
+    private fun exitApp() {
+        onStop()
+        trayIcon?.let { SystemTray.getSystemTray().remove(it) }
+        System.exit(0)
     }
 
     fun setStatus(connected: Boolean, text: String) {
         SwingUtilities.invokeLater {
             statusDot.foreground = if (connected) Color(63, 185, 80) else Color(232, 74, 111)
             statusLabel.text = text
+            trayIcon?.toolTip = "KFD Tracker — $text"
         }
     }
 
@@ -156,7 +222,7 @@ class TrackerWindow(
     }
 
     private fun styleButton(btn: JButton, color: Color) {
-        val normalBorder  = BorderFactory.createCompoundBorder(
+        val normalBorder = BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(Color(color.red, color.green, color.blue, 100)),
             EmptyBorder(7, 14, 7, 14)
         )

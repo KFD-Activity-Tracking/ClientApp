@@ -32,6 +32,7 @@ fun startBatchSender(
             onLog?.invoke("[${now()}] Сессия #$sessionId открыта")
         }
         onLogin?.invoke()
+        metricsCollector.sample()
     } catch (e: Exception) {
         onError?.invoke(e.message ?: "Ошибка входа")
         client.close()

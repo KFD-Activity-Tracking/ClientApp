@@ -1,12 +1,13 @@
 package metrics
 
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 object SystemMetrics {
 
     fun readCpuPercent(): Double {
         val (idle1, total1) = parseProcStat()
-        Thread.sleep(200)
+        try { Thread.sleep(200) } catch (_: InterruptedException) { Thread.currentThread().interrupt(); return 0.0 }
         val (idle2, total2) = parseProcStat()
         val totalDelta = total2 - total1
         val idleDelta = idle2 - idle1
@@ -24,8 +25,12 @@ object SystemMetrics {
 
     fun readGpuPercent(): Double {
         runCatching {
-            return ProcessBuilder("nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits")
-                .start().inputStream.bufferedReader().readText().trim().toDouble()
+            val proc = ProcessBuilder("nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits").start()
+            if (proc.waitFor(2, TimeUnit.SECONDS)) {
+                return proc.inputStream.bufferedReader().readText().trim().toDouble()
+            } else {
+                proc.destroyForcibly()
+            }
         }
         runCatching {
             return File("/sys/class/drm/card0/device/gpu_busy_percent").readText().trim().toDouble()

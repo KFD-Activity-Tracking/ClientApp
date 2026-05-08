@@ -30,15 +30,15 @@ fun main(args: Array<String>) {
         startBatchSender(
             username = username,
             password = password,
-            onBatchError = { msg -> println("[KFD] ⚠ $msg") },
+            onLog        = { msg -> println(msg) },
+            onBatchError = { msg -> println("⚠ $msg") },
             onLogin = {
-                println("[KFD] Авторизация успешна. Отслеживание запущено.")
                 tracker.start()
                 if (tracker is LinuxEvdevTracker && !tracker.keyboardAvailable) {
-                    println("[KFD] ⚠ Нет доступа к клавиатуре. Добавьте пользователя в группу input: sudo usermod -aG input \$USER")
+                    println("⚠ Нет доступа к клавиатуре. Добавьте пользователя в группу input: sudo usermod -aG input \$USER")
                 }
             },
-            onError = { msg -> println("[KFD] Ошибка: $msg") }
+            onError = { msg -> println("✗ $msg") }
         )
         Runtime.getRuntime().addShutdownHook(Thread { tracker.stop() })
         Thread.sleep(Long.MAX_VALUE)
@@ -55,17 +55,17 @@ fun main(args: Array<String>) {
                 senderThread = startBatchSender(
                     username = u,
                     password = p,
+                    onLog        = { msg -> window?.log(msg) },
                     onBatchError = { msg -> window?.log("⚠ $msg") },
                     onLogin = {
-                        window?.log("Авторизация успешна. Отслеживание запущено.")
                         window?.setTracking(true)
                         tracker.start()
                         if (tracker is LinuxEvdevTracker && !tracker.keyboardAvailable) {
-                            window?.log("⚠ Нет доступа к клавиатуре. Добавьте пользователя в группу input: sudo usermod -aG input \$USER")
+                            window?.log("⚠ Нет доступа к клавиатуре: sudo usermod -aG input \$USER")
                         }
                     },
                     onError = { msg ->
-                        window?.log("Ошибка: $msg")
+                        window?.log("✗ $msg")
                         window?.setStatus(false, "Ошибка подключения")
                         window?.setTracking(false)
                     }

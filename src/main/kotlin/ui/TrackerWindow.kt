@@ -124,6 +124,12 @@ class TrackerWindow(
             preferredSize = Dimension(440, 110)
         }
 
+        val exitPanel = JPanel(BorderLayout()).apply {
+            background = Color(22, 27, 34)
+            add(exitBtn, BorderLayout.CENTER)
+            maximumSize = Dimension(Int.MAX_VALUE, exitBtn.preferredSize.height)
+        }
+
         root.add(header, BorderLayout.NORTH)
         val center = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
@@ -132,9 +138,9 @@ class TrackerWindow(
             add(Box.createVerticalStrut(8))
             add(sessionBtns)
             add(Box.createVerticalStrut(10))
-            add(logScroll)
+            add(exitPanel)
             add(Box.createVerticalStrut(8))
-            add(exitBtn.apply { maximumSize = Dimension(Int.MAX_VALUE, exitBtn.preferredSize.height) })
+            add(logScroll)
         }
         root.add(center, BorderLayout.CENTER)
         frame.contentPane = root
